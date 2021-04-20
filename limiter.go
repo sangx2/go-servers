@@ -96,4 +96,6 @@ func (l *Limiter) Decrease() {
 
 func (l *Limiter) Stop() {
 	l.doneChan <- true
+
+	l.wg.Wait()
 }
