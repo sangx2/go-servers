@@ -46,8 +46,8 @@ func (l *Limiter) Start() {
 	defer close(createDone)
 
 	l.wg.Add(1)
-	go func(l *Limiter) {
-		defer l.wg.Done()
+	go func(l *Limiter, wg *sync.WaitGroup) {
+		defer wg.Done()
 
 		var timer = time.NewTimer(l.Duration)
 		timer.Stop()
@@ -66,7 +66,7 @@ func (l *Limiter) Start() {
 				return
 			}
 		}
-	}(l)
+	}(l, &l.wg)
 	<-createDone
 }
 

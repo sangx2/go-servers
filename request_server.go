@@ -63,8 +63,8 @@ func (r *RequestServer) Start() {
 		}
 
 		r.wg.Add(1)
-		go func(requestChan chan interface{}, f func(interface{}), limiters []*Limiter, doneChan chan bool) {
-			defer r.wg.Done()
+		go func(requestChan chan interface{}, f func(interface{}), limiters []*Limiter, doneChan chan bool, wg *sync.WaitGroup) {
+			defer wg.Done()
 			createDoneChan <- nil
 
 			for {
@@ -72,7 +72,11 @@ func (r *RequestServer) Start() {
 				case request := <-requestChan:
 					for _, limiter := range limiters {
 						if limiter.IsLimited() {
-							<-limiter.EnableTimeChan
+							select {
+							case <-limiter.EnableTimeChan:
+							case <-doneChan:
+								return
+							}
 						}
 					}
 
@@ -85,7 +89,7 @@ func (r *RequestServer) Start() {
 					return
 				}
 			}
-		}(r.requestChanMap[title], r.functionMap[title], limiters, doneChan)
+		}(r.requestChanMap[title], r.functionMap[title], limiters, doneChan, &r.wg)
 		<-createDoneChan
 	}
 }
