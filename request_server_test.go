@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func printRequestTest() {
+func printRequestTest(request interface{}) {
 	fmt.Println("request test")
 }
 
@@ -76,7 +76,7 @@ func TestRequestServer(t *testing.T) {
 	requestServer.Start()
 
 	for i := 0; i < 6; i++ {
-		if e := requestServer.Request("request"); e != nil {
+		if e := requestServer.Request("request", nil); e != nil {
 			t.Fatalf(e.Error())
 		}
 	}
