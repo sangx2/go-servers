@@ -21,7 +21,7 @@ func TestSchedulingServer_AddSchedulerWithFunc(t *testing.T) {
 		[]time.Weekday{time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday})
 
 	if e := schedulingServer.AddSchedulerWithFunc("scheduling", nil, printSchedulingTest); e == nil {
-		t.Fatalf("scheduler is nil, thus this eror must not be nil")
+		t.Fatalf("scheduler is nil, thus this error must not be nil")
 	}
 
 	if e := schedulingServer.AddSchedulerWithFunc("scheduling", scheduler, nil); e == nil {

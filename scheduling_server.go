@@ -7,7 +7,7 @@ import (
 
 type SchedulingServer struct {
 	SchedulerMap map[string]*Scheduler
-	functionMap  map[string]func()
+	cbFuncMap    map[string]func()
 
 	doneChans []chan bool
 
@@ -18,11 +18,11 @@ func NewSchedulingServer() *SchedulingServer {
 	return &SchedulingServer{
 		SchedulerMap: make(map[string]*Scheduler),
 
-		functionMap: make(map[string]func()),
+		cbFuncMap: make(map[string]func()),
 	}
 }
 
-func (s *SchedulingServer) AddSchedulerWithFunc(title string, scheduler *Scheduler, function func()) error {
+func (s *SchedulingServer) AddSchedulerWithFunc(title string, scheduler *Scheduler, cbFunc func()) error {
 	if _, isExist := s.SchedulerMap[title]; isExist {
 		return fmt.Errorf("%s is already exist", title)
 	}
@@ -31,12 +31,12 @@ func (s *SchedulingServer) AddSchedulerWithFunc(title string, scheduler *Schedul
 		return fmt.Errorf("scheduler is nil")
 	}
 
-	if function == nil {
-		return fmt.Errorf("function is nil")
+	if cbFunc == nil {
+		return fmt.Errorf("cbFunc is nil")
 	}
 
 	s.SchedulerMap[title] = scheduler
-	s.functionMap[title] = function
+	s.cbFuncMap[title] = cbFunc
 
 	return nil
 }
@@ -47,19 +47,19 @@ func (s *SchedulingServer) Start() {
 		s.doneChans = append(s.doneChans, doneChan)
 
 		s.wg.Add(1)
-		go func(scheduler *Scheduler, function func(), doneChan chan bool, wg *sync.WaitGroup) {
+		go func(scheduler *Scheduler, cbFunc func(), doneChan chan bool, wg *sync.WaitGroup) {
 			defer wg.Done()
 
 			timeChan := scheduler.Start()
 			for {
 				select {
 				case <-timeChan:
-					function()
+					cbFunc()
 				case <-doneChan:
 					return
 				}
 			}
-		}(scheduler, s.functionMap[title], doneChan, &s.wg)
+		}(scheduler, s.cbFuncMap[title], doneChan, &s.wg)
 	}
 }
 

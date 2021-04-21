@@ -10,7 +10,7 @@ type RequestServer struct {
 	queueSize int
 
 	requestChanMap map[string]chan interface{}
-	functionMap    map[string]func(interface{})
+	cbFuncMap      map[string]func(interface{})
 	LimitersMap    map[string][]*Limiter
 
 	doneChans []chan bool
@@ -28,23 +28,23 @@ func NewRequestServer(qSize int) *RequestServer {
 
 		requestChanMap: make(map[string]chan interface{}),
 
-		functionMap: make(map[string]func(interface{})),
+		cbFuncMap: make(map[string]func(interface{})),
 
 		LimitersMap: make(map[string][]*Limiter),
 	}
 }
 
-func (r *RequestServer) AddLimitersWithFunc(title string, limiters []*Limiter, f func(interface{})) error {
+func (r *RequestServer) AddLimitersWithFunc(title string, limiters []*Limiter, cbFunc func(interface{})) error {
 	if _, isExist := r.LimitersMap[title]; isExist {
 		return fmt.Errorf("%s is already exist", title)
 	}
 
-	if f == nil {
-		return fmt.Errorf("func is nil")
+	if cbFunc == nil {
+		return fmt.Errorf("cbFunc is nil")
 	}
 
 	r.LimitersMap[title] = limiters
-	r.functionMap[title] = f
+	r.cbFuncMap[title] = cbFunc
 	r.requestChanMap[title] = make(chan interface{}, r.queueSize)
 
 	return nil
@@ -63,7 +63,7 @@ func (r *RequestServer) Start() {
 		r.doneChans = append(r.doneChans, doneChan)
 
 		r.wg.Add(1)
-		go func(requestChan chan interface{}, f func(interface{}), limiters []*Limiter, doneChan chan bool, wg *sync.WaitGroup) {
+		go func(requestChan chan interface{}, cbFunc func(interface{}), limiters []*Limiter, doneChan chan bool, wg *sync.WaitGroup) {
 			defer wg.Done()
 			createDoneChan <- nil
 
@@ -80,7 +80,7 @@ func (r *RequestServer) Start() {
 						}
 					}
 
-					f(request)
+					cbFunc(request)
 
 					for _, limiter := range limiters {
 						limiter.Decrease()
@@ -89,7 +89,7 @@ func (r *RequestServer) Start() {
 					return
 				}
 			}
-		}(r.requestChanMap[title], r.functionMap[title], limiters, doneChan, &r.wg)
+		}(r.requestChanMap[title], r.cbFuncMap[title], limiters, doneChan, &r.wg)
 		<-createDoneChan
 	}
 }
