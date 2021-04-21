@@ -49,6 +49,7 @@ func (s *SchedulingServer) Start() {
 		s.wg.Add(1)
 		go func(scheduler *Scheduler, cbFunc func(), doneChan chan bool, wg *sync.WaitGroup) {
 			defer wg.Done()
+			defer scheduler.Stop()
 
 			timeChan := scheduler.Start()
 			for {
@@ -64,10 +65,6 @@ func (s *SchedulingServer) Start() {
 }
 
 func (s *SchedulingServer) Shutdown() {
-	for _, scheduler := range s.SchedulerMap {
-		scheduler.Stop()
-	}
-
 	for _, doneChan := range s.doneChans {
 		doneChan <- true
 	}

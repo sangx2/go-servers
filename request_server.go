@@ -65,6 +65,11 @@ func (r *RequestServer) Start() {
 		r.wg.Add(1)
 		go func(requestChan chan interface{}, cbFunc func(interface{}), limiters []*Limiter, doneChan chan bool, wg *sync.WaitGroup) {
 			defer wg.Done()
+			defer func() {
+				for _, limiter := range limiters {
+					limiter.Stop()
+				}
+			}()
 			createDoneChan <- nil
 
 			for {
@@ -105,12 +110,6 @@ func (r *RequestServer) Request(title string, request interface{}) error {
 }
 
 func (r *RequestServer) Shutdown() {
-	for _, limiters := range r.LimitersMap {
-		for _, limiter := range limiters {
-			limiter.Stop()
-		}
-	}
-
 	for _, doneChan := range r.doneChans {
 		doneChan <- true
 	}
