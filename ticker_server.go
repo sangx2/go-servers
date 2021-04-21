@@ -60,6 +60,7 @@ func (t *TickerServer) Start() {
 		t.wg.Add(1)
 		go func(ticker *time.Ticker, cbFunc func(), doneChan chan bool, wg *sync.WaitGroup) {
 			defer wg.Done()
+			defer ticker.Stop()
 
 			for {
 				select {
@@ -74,10 +75,6 @@ func (t *TickerServer) Start() {
 }
 
 func (t *TickerServer) Shutdown() {
-	for _, ticker := range t.TickerMap {
-		ticker.Stop()
-	}
-
 	for _, doneChan := range t.doneChans {
 		doneChan <- true
 	}
