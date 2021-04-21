@@ -42,6 +42,16 @@ func (t *TickerServer) AddTickerWithFunc(title string, duration time.Duration, c
 	return nil
 }
 
+func (t *TickerServer) ResetTicker(title string, duration time.Duration) error {
+	ticker, isExist := t.TickerMap[title]
+	if !isExist {
+		return fmt.Errorf("title is not exist")
+	}
+	ticker.Reset(duration)
+
+	return nil
+}
+
 func (t *TickerServer) Start() {
 	for title, ticker := range t.TickerMap {
 		doneChan := make(chan bool, 1)

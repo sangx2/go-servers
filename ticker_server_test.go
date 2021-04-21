@@ -45,7 +45,13 @@ func TestTickerServer(t *testing.T) {
 
 	tickerServer.Start()
 
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 1)
+
+	if e := tickerServer.ResetTicker("ticker", time.Millisecond*500); e != nil {
+		t.Fatalf(e.Error())
+	}
+
+	time.Sleep(time.Second * 2)
 
 	tickerServer.Shutdown()
 }
