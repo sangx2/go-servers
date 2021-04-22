@@ -65,11 +65,11 @@ func (r *RequestServer) Start() {
 		r.wg.Add(1)
 		go func(requestChan chan interface{}, cbFunc func(interface{}), limiters []*Limiter, doneChan chan bool, wg *sync.WaitGroup) {
 			defer wg.Done()
-			defer func() {
+			defer func(limiters []*Limiter) {
 				for _, limiter := range limiters {
 					limiter.Stop()
 				}
-			}()
+			}(limiters)
 			createDoneChan <- nil
 
 			for {

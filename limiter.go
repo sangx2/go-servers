@@ -10,6 +10,7 @@ const UNLIMITED = -1
 
 type Limiter struct {
 	Duration time.Duration
+	timer    *time.Timer
 
 	Limit   int32
 	remains *int32
@@ -21,13 +22,17 @@ type Limiter struct {
 	wg sync.WaitGroup
 }
 
-func NewLimiter(Duration time.Duration, limit int32) *Limiter {
+func NewLimiter(duration time.Duration, limit int32) *Limiter {
+	if duration <= 0 {
+		return nil
+	}
+
 	if limit < UNLIMITED || limit == 0 {
 		return nil
 	}
 
 	l := &Limiter{
-		Duration: Duration,
+		Duration: duration,
 
 		Limit:   limit,
 		remains: new(int32),
@@ -36,6 +41,9 @@ func NewLimiter(Duration time.Duration, limit int32) *Limiter {
 		resetChan:      make(chan bool, 1),
 		doneChan:       make(chan bool, 1),
 	}
+	l.timer = time.NewTimer(duration)
+	l.timer.Stop()
+
 	*l.remains = limit
 
 	return l
@@ -46,27 +54,24 @@ func (l *Limiter) Start() {
 	defer close(createDone)
 
 	l.wg.Add(1)
-	go func(l *Limiter, wg *sync.WaitGroup) {
-		defer wg.Done()
-
-		var timer = time.NewTimer(l.Duration)
-		timer.Stop()
+	go func(l *Limiter) {
+		defer l.wg.Done()
+		defer l.timer.Stop()
 
 		createDone <- nil
 
 		for {
 			select {
-			case enableTime := <-timer.C:
+			case enableTime := <-l.timer.C:
 				atomic.StoreInt32(l.remains, l.Limit)
 				l.EnableTimeChan <- enableTime
 			case <-l.resetChan:
-				timer.Reset(l.Duration)
+				l.timer.Reset(l.Duration)
 			case <-l.doneChan:
-				timer.Stop()
 				return
 			}
 		}
-	}(l, &l.wg)
+	}(l)
 	<-createDone
 }
 
@@ -95,6 +100,10 @@ func (l *Limiter) Decrease() {
 }
 
 func (l *Limiter) Stop() {
+	l.timer.Stop()
+	for len(l.EnableTimeChan) == 0 {
+		<-l.EnableTimeChan
+	}
 	l.doneChan <- true
 
 	l.wg.Wait()
