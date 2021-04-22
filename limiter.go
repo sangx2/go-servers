@@ -101,7 +101,7 @@ func (l *Limiter) Decrease() {
 
 func (l *Limiter) Stop() {
 	l.timer.Stop()
-	for len(l.EnableTimeChan) == 0 {
+	for len(l.EnableTimeChan) != 0 {
 		<-l.EnableTimeChan
 	}
 	l.doneChan <- true
