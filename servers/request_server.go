@@ -1,5 +1,4 @@
-// go-request
-package server
+package servers
 
 import (
 	"fmt"
