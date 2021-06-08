@@ -21,13 +21,13 @@ type Limiter struct {
 	wg sync.WaitGroup
 }
 
-func NewLimiter(Duration time.Duration, limit int32) *Limiter {
+func NewLimiter(duration time.Duration, limit int32) *Limiter {
 	if limit < UNLIMITED || limit == 0 {
 		return nil
 	}
 
 	l := &Limiter{
-		Duration: Duration,
+		Duration: duration,
 
 		Limit:   limit,
 		remains: new(int32),
