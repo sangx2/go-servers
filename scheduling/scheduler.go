@@ -1,4 +1,4 @@
-package servers
+package scheduling
 
 import (
 	"sync"

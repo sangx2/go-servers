@@ -1,4 +1,4 @@
-package servers
+package scheduling
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ func printSchedulingTest() {
 }
 
 func TestSchedulingServer_AddSchedulerWithFunc(t *testing.T) {
-	schedulingServer := NewSchedulingServer()
+	schedulingServer := NewServer()
 	if schedulingServer == nil {
 		t.Fatalf("schedulingServer is nil")
 	}
@@ -38,7 +38,7 @@ func TestSchedulingServer_AddSchedulerWithFunc(t *testing.T) {
 }
 
 func TestSchedulingServer(t *testing.T) {
-	schedulingServer := NewSchedulingServer()
+	schedulingServer := NewServer()
 	if schedulingServer == nil {
 		t.Fatalf("schedulingServer is nil")
 	}

@@ -1,4 +1,4 @@
-package servers
+package ticker
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ func PrintTickerTest() {
 }
 
 func TestTickerServer_AddTickerWithFunc(t *testing.T) {
-	tickerServer := NewTickerServer()
+	tickerServer := NewServer()
 	if tickerServer == nil {
 		t.Fatalf("tickerServer is nil")
 	}
@@ -34,7 +34,7 @@ func TestTickerServer_AddTickerWithFunc(t *testing.T) {
 }
 
 func TestTickerServer(t *testing.T) {
-	tickerServer := NewTickerServer()
+	tickerServer := NewServer()
 	if tickerServer == nil {
 		t.Fatalf("tickerServer is nil")
 	}

@@ -1,11 +1,11 @@
-package servers
+package request
 
 import (
 	"fmt"
 	"sync"
 )
 
-type RequestServer struct {
+type Server struct {
 	queueSize int
 
 	requestChanMap map[string]chan interface{}
@@ -17,12 +17,12 @@ type RequestServer struct {
 	wg sync.WaitGroup
 }
 
-func NewRequestServer(qSize int) *RequestServer {
+func NewServer(qSize int) *Server {
 	if qSize <= 0 {
 		return nil
 	}
 
-	return &RequestServer{
+	return &Server{
 		queueSize: qSize,
 
 		requestChanMap: make(map[string]chan interface{}),
@@ -33,7 +33,7 @@ func NewRequestServer(qSize int) *RequestServer {
 	}
 }
 
-func (r *RequestServer) AddLimitersWithFunc(title string, limiters []*Limiter, f func()) error {
+func (r *Server) AddLimitersWithFunc(title string, limiters []*Limiter, f func()) error {
 	if _, isExist := r.LimitersMap[title]; isExist {
 		return fmt.Errorf("%s is already exist", title)
 	}
@@ -49,7 +49,7 @@ func (r *RequestServer) AddLimitersWithFunc(title string, limiters []*Limiter, f
 	return nil
 }
 
-func (r *RequestServer) Start() {
+func (r *Server) Start() {
 	createDoneChan := make(chan error, 1)
 	defer close(createDoneChan)
 
@@ -97,7 +97,7 @@ func (r *RequestServer) Start() {
 	}
 }
 
-func (r *RequestServer) Request(title string) error {
+func (r *Server) Request(title string) error {
 	if len(r.requestChanMap[title]) == r.queueSize {
 		return fmt.Errorf("queue is full")
 	}
@@ -107,7 +107,7 @@ func (r *RequestServer) Request(title string) error {
 	return nil
 }
 
-func (r *RequestServer) Shutdown() {
+func (r *Server) Shutdown() {
 	for _, limiters := range r.LimitersMap {
 		for _, limiter := range limiters {
 			limiter.Stop()

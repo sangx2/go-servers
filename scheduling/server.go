@@ -1,11 +1,11 @@
-package servers
+package scheduling
 
 import (
 	"fmt"
 	"sync"
 )
 
-type SchedulingServer struct {
+type Server struct {
 	SchedulerMap map[string]*Scheduler
 	cbFuncMap    map[string]func()
 
@@ -14,15 +14,15 @@ type SchedulingServer struct {
 	wg sync.WaitGroup
 }
 
-func NewSchedulingServer() *SchedulingServer {
-	return &SchedulingServer{
+func NewServer() *Server {
+	return &Server{
 		SchedulerMap: make(map[string]*Scheduler),
 
 		cbFuncMap: make(map[string]func()),
 	}
 }
 
-func (s *SchedulingServer) AddSchedulerWithFunc(title string, scheduler *Scheduler, cbFunc func()) error {
+func (s *Server) AddSchedulerWithFunc(title string, scheduler *Scheduler, cbFunc func()) error {
 	if _, isExist := s.SchedulerMap[title]; isExist {
 		return fmt.Errorf("%s is already exist", title)
 	}
@@ -41,7 +41,7 @@ func (s *SchedulingServer) AddSchedulerWithFunc(title string, scheduler *Schedul
 	return nil
 }
 
-func (s *SchedulingServer) Start() {
+func (s *Server) Start() {
 	for title, scheduler := range s.SchedulerMap {
 		doneChan := make(chan bool, 1)
 		s.doneChans = append(s.doneChans, doneChan)
@@ -64,7 +64,7 @@ func (s *SchedulingServer) Start() {
 	}
 }
 
-func (s *SchedulingServer) Shutdown() {
+func (s *Server) Shutdown() {
 	for _, doneChan := range s.doneChans {
 		doneChan <- true
 	}

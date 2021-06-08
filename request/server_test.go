@@ -1,4 +1,4 @@
-package servers
+package request
 
 import (
 	"fmt"
@@ -11,21 +11,21 @@ func printRequestTest() {
 }
 
 func TestNewRequestServer(t *testing.T) {
-	var requestServer *RequestServer
+	var requestServer *Server
 
-	requestServer = NewRequestServer(0)
+	requestServer = NewServer(0)
 	if requestServer != nil {
 		t.Fatalf("requestServer is not nil")
 	}
 
-	requestServer = NewRequestServer(-1)
+	requestServer = NewServer(-1)
 	if requestServer != nil {
 		t.Fatalf("requestServer is not nil")
 	}
 }
 
 func TestRequestServer_AddLimitersWithFunc(t *testing.T) {
-	requestServer := NewRequestServer(1000)
+	requestServer := NewServer(1000)
 	if requestServer == nil {
 		t.Fatalf("requestServer is nil")
 	}
@@ -54,7 +54,7 @@ func TestRequestServer_AddLimitersWithFunc(t *testing.T) {
 }
 
 func TestRequestServer(t *testing.T) {
-	requestServer := NewRequestServer(1000)
+	requestServer := NewServer(1000)
 	if requestServer == nil {
 		t.Fatalf("requestServer is nil")
 	}

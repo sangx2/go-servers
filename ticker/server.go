@@ -1,4 +1,4 @@
-package servers
+package ticker
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type TickerServer struct {
+type Server struct {
 	TickerMap map[string]*time.Ticker
 	cbFuncMap map[string]func()
 
@@ -15,15 +15,15 @@ type TickerServer struct {
 	wg sync.WaitGroup
 }
 
-func NewTickerServer() *TickerServer {
-	return &TickerServer{
+func NewServer() *Server {
+	return &Server{
 		TickerMap: make(map[string]*time.Ticker),
 
 		cbFuncMap: make(map[string]func()),
 	}
 }
 
-func (t *TickerServer) AddTickerWithFunc(title string, duration time.Duration, cbFunc func()) error {
+func (t *Server) AddTickerWithFunc(title string, duration time.Duration, cbFunc func()) error {
 	if _, isExist := t.TickerMap[title]; isExist {
 		return fmt.Errorf("%s is already exist", title)
 	}
@@ -42,7 +42,7 @@ func (t *TickerServer) AddTickerWithFunc(title string, duration time.Duration, c
 	return nil
 }
 
-func (t *TickerServer) ResetTicker(title string, duration time.Duration) error {
+func (t *Server) ResetTicker(title string, duration time.Duration) error {
 	ticker, isExist := t.TickerMap[title]
 	if !isExist {
 		return fmt.Errorf("title is not exist")
@@ -52,7 +52,7 @@ func (t *TickerServer) ResetTicker(title string, duration time.Duration) error {
 	return nil
 }
 
-func (t *TickerServer) Start() {
+func (t *Server) Start() {
 	for title, ticker := range t.TickerMap {
 		doneChan := make(chan bool, 1)
 		t.doneChans = append(t.doneChans, doneChan)
@@ -74,7 +74,7 @@ func (t *TickerServer) Start() {
 	}
 }
 
-func (t *TickerServer) Shutdown() {
+func (t *Server) Shutdown() {
 	for _, doneChan := range t.doneChans {
 		doneChan <- true
 	}
