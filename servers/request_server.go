@@ -71,7 +71,11 @@ func (r *RequestServer) Start() {
 				case <-requestChan:
 					for _, limiter := range limiters {
 						if limiter.IsLimited() {
-							<-limiter.EnableTimeChan
+							select {
+							case <-limiter.EnableTimeChan:
+							case <-doneChan:
+								return
+							}
 						} else {
 							for len(limiter.EnableTimeChan) != 0 {
 								<-limiter.EnableTimeChan
