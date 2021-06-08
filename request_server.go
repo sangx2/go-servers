@@ -73,6 +73,10 @@ func (r *RequestServer) Start() {
 					for _, limiter := range limiters {
 						if limiter.IsLimited() {
 							<-limiter.EnableTimeChan
+						} else {
+							for len(limiter.EnableTimeChan) != 0 {
+								<-limiter.EnableTimeChan
+							}
 						}
 					}
 
