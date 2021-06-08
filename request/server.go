@@ -53,17 +53,17 @@ func (r *Server) Start() {
 	createDoneChan := make(chan error, 1)
 	defer close(createDoneChan)
 
-	doneChan := make(chan bool, 1)
-	r.doneChans = append(r.doneChans, doneChan)
-
 	for title, limiters := range r.LimitersMap {
 		for _, limiter := range limiters {
 			limiter.Start()
 		}
 
+		doneChan := make(chan bool, 1)
+		r.doneChans = append(r.doneChans, doneChan)
+
 		r.wg.Add(1)
-		go func(requestChan chan interface{}, f func(interface{}), limiters []*Limiter, doneChan chan bool) {
-			defer r.wg.Done()
+		go func(requestChan chan interface{}, f func(interface{}), limiters []*Limiter, doneChan chan bool, wg *sync.WaitGroup) {
+			defer wg.Done()
 			createDoneChan <- nil
 
 			for {
@@ -92,7 +92,7 @@ func (r *Server) Start() {
 					return
 				}
 			}
-		}(r.requestChanMap[title], r.functionMap[title], limiters, doneChan)
+		}(r.requestChanMap[title], r.functionMap[title], limiters, doneChan, &r.wg)
 		<-createDoneChan
 	}
 }
