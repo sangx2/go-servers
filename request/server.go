@@ -9,7 +9,7 @@ type Server struct {
 	queueSize int
 
 	requestChanMap map[string]chan interface{}
-	functionMap    map[string]func()
+	functionMap    map[string]func(interface{})
 	LimitersMap    map[string][]*Limiter
 
 	doneChans []chan bool
@@ -27,13 +27,13 @@ func NewServer(qSize int) *Server {
 
 		requestChanMap: make(map[string]chan interface{}),
 
-		functionMap: make(map[string]func()),
+		functionMap: make(map[string]func(interface{})),
 
 		LimitersMap: make(map[string][]*Limiter),
 	}
 }
 
-func (r *Server) AddLimitersWithFunc(title string, limiters []*Limiter, f func()) error {
+func (r *Server) AddLimitersWithFunc(title string, limiters []*Limiter, f func(interface{})) error {
 	if _, isExist := r.LimitersMap[title]; isExist {
 		return fmt.Errorf("%s is already exist", title)
 	}
@@ -62,13 +62,13 @@ func (r *Server) Start() {
 		}
 
 		r.wg.Add(1)
-		go func(requestChan chan interface{}, f func(), limiters []*Limiter, doneChan chan bool) {
+		go func(requestChan chan interface{}, f func(interface{}), limiters []*Limiter, doneChan chan bool) {
 			defer r.wg.Done()
 			createDoneChan <- nil
 
 			for {
 				select {
-				case <-requestChan:
+				case request := <-requestChan:
 					for _, limiter := range limiters {
 						if limiter.IsLimited() {
 							select {
@@ -83,7 +83,7 @@ func (r *Server) Start() {
 						}
 					}
 
-					f()
+					f(request)
 
 					for _, limiter := range limiters {
 						limiter.Decrease()
@@ -97,12 +97,12 @@ func (r *Server) Start() {
 	}
 }
 
-func (r *Server) Request(title string) error {
+func (r *Server) Request(title string, request interface{}) error {
 	if len(r.requestChanMap[title]) == r.queueSize {
 		return fmt.Errorf("queue is full")
 	}
 
-	r.requestChanMap[title] <- nil
+	r.requestChanMap[title] <- request
 
 	return nil
 }
