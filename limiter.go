@@ -63,6 +63,8 @@ func (l *Limiter) Start() {
 				timer.Reset(l.Duration)
 			case <-l.doneChan:
 				timer.Stop()
+				close(l.EnableTimeChan)
+
 				return
 			}
 		}
@@ -74,10 +76,10 @@ func (l *Limiter) IsLimited() bool {
 	var ret = false
 
 	switch atomic.LoadInt32(l.remains) {
-	case l.Limit, UNLIMITED:
-		ret = false
 	case 0:
 		ret = true
+		//default: // UNLIMITED, > 0
+		//	ret = false
 	}
 
 	return ret
@@ -96,4 +98,5 @@ func (l *Limiter) Decrease() {
 
 func (l *Limiter) Stop() {
 	l.doneChan <- true
+	close(l.doneChan)
 }
